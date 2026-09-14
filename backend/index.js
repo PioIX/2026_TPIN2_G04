@@ -24,3 +24,24 @@ app.get('/', function (req, res) {
         message: 'GET Home route working fine!'
     });
 });
+
+app.post('/usuarios', async function (req, res) {
+    try {
+        await realizarQuery(`INSERT INTO Usuarios (nombre, contraseña, mail, id_chat) VALUES
+            ('${req.body.nombre}', '${req.body.contraseña}', '${req.body.mail}')`);
+        res.status(201).json({ mensaje: "Usuario agregado con éxito" });
+    } catch (error) {
+        console.error("Error en /usuarios:", error);
+        res.status(500).json({ mensaje: "Hubo un error al agregar el usuario" });
+    }
+});
+
+app.get('/usuarios', async function (req, res) {
+    try {
+        let respuesta = await realizarQuery(`SELECT * FROM Usuarios`)
+        res.status(200).json(respuesta)
+    } catch (error) {
+        console.error("Error en /usuarios:", error)
+        res.status(500).json({ mensaje: "Hubo un error al obtener los usuarios" })
+    }
+});
