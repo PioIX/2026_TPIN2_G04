@@ -28,7 +28,7 @@ app.get('/', function (req, res) {
 app.post('/usuarios', async function (req, res) {
     try {
         await realizarQuery(`INSERT INTO Usuarios (nombre, contraseña, mail, id_chat) VALUES
-            ('${req.body.nombre}', '${req.body.contraseña}', '${req.body.mail}')`);
+            ('${req.body.nombre}', '${req.body.contraseña}', '${req.body.mail}','${req.body.id_chat}')`);
         res.status(201).json({ mensaje: "Usuario agregado con éxito" });
     } catch (error) {
         console.error("Error en /usuarios:", error);
