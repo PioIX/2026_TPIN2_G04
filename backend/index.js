@@ -60,3 +60,16 @@ io.on("connection", (socket) => {
     });
 
 });
+
+app.post("/usuarios", async function(req, res){
+    
+    await realizarQuery(`INSERT INTO Usuarios (id_usuario, nombre, contraseña, mail) VALUES('${req.body.id_usuario}, ${req.body.nombre},${req.body.contraseña}, ${req.body.mail}')`)
+    const nuevoUsuario = {
+        id_usuario: id_usuario,
+        nombre: nombre,
+        contraseña: contraseña,
+        mail: mail
+    }}
+
+
+);
