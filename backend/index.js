@@ -1,4 +1,5 @@
-require("dotenv").config();
+require('dotenv').config({ path: __dirname + '/.home.env' })
+
 const express = require("express");
 const cors = require("cors");
 const session = require("express-session");
@@ -61,10 +62,22 @@ io.on("connection", (socket) => {
 
 });
 
-app.post("/usuarios", async function(req, res){
-    
+// Pedidos HTTP
+// --- Usuarios
+app.get("/usuarios", async function(req, res){
     try {
-        await realizarQuery(`INSERT INTO Usuarios (id_usuario, nombre, contraseña, mail) VALUES('${req.body.id_usuario}, ${req.body.nombre},${req.body.contraseña}, ${req.body.mail}')`)
+        const usuarios = await realizarQuery(`SELECT id_usuario, nombre, contraseña, email FROM Usuarios `)
+        res.status(200).json(usuarios);
+    } catch (error) {
+        console.error("Error al obtener usuarios:", error);
+        res.status(500).json({ mensaje: "Hubo un error al obtener la lista de usuarios" });
+    }
+})
+
+app.post("/usuarios", async function(req, res){
+    try {
+        await realizarQuery(`INSERT INTO Usuarios (id_usuario, nombre, contraseña, email) VALUES
+            ('${req.body.id_usuario}', '${req.body.nombre}', '${req.body.contraseña}',' ${req.body.email}')`);
         res.status(201).json({ mensaje: "Usuario creado con éxito" });
     } catch (error) {
         console.error("Error en /usuarios:", error); 
@@ -79,7 +92,49 @@ app.post("/usuarios", async function(req, res){
     //     mail: mail
     //  }
     }
-    
-
 
 );
+
+// --- Chats
+app.get("/Chats", async function(req, res) {
+    try {
+        const chats = await realizarQuery(`SELECT id_chat, es_grupo, nombre, id_usuario FROM Chats`)
+        res.status(200).json(chats);
+    } catch (error) {
+        console.log("Error al obtener usuarios:", error)
+        res.status(500).json({ mensaje: "Hubo un error al obtener la lista de chats" });
+    }
+    
+})
+
+app.post("/Chats", async function (req, res) {
+    try {
+    await realizarQuery(`INSERT INTO Chats (id_chat, es_grupo, nombre, id_usuario) VALUES
+            ('${req.body.id_chat}', '${req.body.es_grupo}', '${req.body.nombre}',' ${req.body.id_usuario}')`);
+    res.status(201).json({ mensaje: "Chat creado con éxito" });
+    } catch (error) {
+        console.log("Hubo un error al crear un nuevo chat")
+    }
+})
+
+// --- Mensajes
+app.get("/Mensajes", async function(req, res) {
+    try {
+        const mensajes = await realizarQuery(`SELECT id_mensaje, id_usuario, contenido, hora, id_chat FROM Mensajes`)
+        res.status(200).json(mensajes);
+    } catch (error) {
+        console.log("Error al obtener mensajes:", error)
+        res.status(500).json({ mensaje: "Hubo un error al obtener la lista de mensajes" });
+    }
+    
+})
+
+app.post("/Mensajes", async function (req, res) {
+    try {
+        await realizarQuery(`INSERT INTO Mensajes (id_mensaje, id_usuario, contenido, hora, id_chat) VALUES
+            ('${req.body.id_mensaje}', '${req.body.id_usuario}', '${req.body.contenido}',' ${req.body.hora}',' ${req.body.id_chat}')`);        
+            res.status(201).json({ mensaje: "Usuario creado con éxito" });
+    } catch (error) {
+        console.log("Hubo un error al crear un nuevo chat")
+    }
+})
