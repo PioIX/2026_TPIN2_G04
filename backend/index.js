@@ -1,4 +1,5 @@
-require("dotenv").config();
+require('dotenv').config({ path: __dirname + '/.home.env' })
+
 const express = require("express");
 const cors = require("cors");
 const session = require("express-session");
@@ -61,15 +62,117 @@ io.on("connection", (socket) => {
 
 });
 
+// Pedidos HTTP
+// --- Usuarios
+app.get("/usuarios", async function(req, res){
+    try {
+        const usuarios = await realizarQuery(`SELECT id_usuario, nombre, contraseña, email FROM Usuarios`);
+        res.status(200).json(usuarios);
+    } catch (error) {
+        console.error("Error al obtener usuarios:", error);
+        res.status(500).json({ mensaje: "Hubo un error al obtener la lista de usuarios" });
+    }
+});
+
 app.post("/usuarios", async function(req, res){
-    
-    await realizarQuery(`INSERT INTO Usuarios (id_usuario, nombre, contraseña, mail) VALUES('${req.body.id_usuario}, ${req.body.nombre},${req.body.contraseña}, ${req.body.mail}')`)
-    const nuevoUsuario = {
-        id_usuario: id_usuario,
-        nombre: nombre,
-        contraseña: contraseña,
-        mail: mail
-    }}
+    try {
+        await realizarQuery(`INSERT INTO Usuarios (id_usuario, nombre, contraseña, email) VALUES
+            ('${req.body.id_usuario}', '${req.body.nombre}', '${req.body.contraseña}', '${req.body.email}')`);
+        res.status(201).json({ mensaje: "Usuario creado con éxito" });
+    } catch (error) {
+        console.error("Error en /usuarios:", error); 
+        res.status(500).json({ mensaje: "Hubo un error al crear el usuario" });
+    }
+});
+
+app.delete('/usuarios', async function(req, res){
+    try {
+        let respuesta = await realizarQuery(`DELETE FROM Usuarios WHERE id_usuario = '${req.body.id_usuario}'`);
+        res.status(200).json({ message: "Usuario eliminado" });
+    } catch (error) {
+        res.status(500).json({ mensaje: "Error al eliminar el usuario" });
+    }
+});
+
+app.put('/usuarios', async function(req, res){
+    try {
+        let respuesta = await realizarQuery(`UPDATE Usuarios SET nombre = '${req.body.nombre}', email = '${req.body.email}' WHERE id_usuario = '${req.body.id_usuario}'`);
+        res.status(200).json({ message: "Usuario modificado" });
+    } catch (error) {
+        console.error("Error al modificar el usuario:", error);
+        res.status(500).json({ mensaje: "Hubo un error al modificar el usuario"});
+    }
+});
+
+// --- Chats
+app.get("/chats", async function(req, res) {
+    try {
+        const chats = await realizarQuery(`SELECT id_chat, es_grupo, nombre, id_usuario FROM Chats`);
+        res.status(200).json(chats);
+    } catch (error) {
+        console.log("Error al obtener chats:", error);
+        res.status(500).json({ mensaje: "Hubo un error al obtener la lista de chats" });
+    }
+});
+
+app.post("/chats", async function (req, res) {
+    try {
+        await realizarQuery(`INSERT INTO Chats (id_chat, es_grupo, nombre, id_usuario) VALUES
+            ('${req.body.id_chat}', '${req.body.es_grupo}', '${req.body.nombre}', '${req.body.id_usuario}')`);
+        res.status(201).json({ mensaje: "Chat creado con éxito" });
+    } catch (error) {
+        res.status(500).json({ mensaje: "Hubo un error al crear un nuevo chat" });
+    }
+});
+
+app.delete('/chats', async function(req, res){
+    try {
+        let respuesta = await realizarQuery(`DELETE FROM Chats WHERE id_chat = '${req.body.id_chat}'`);
+        res.status(200).json({ message: "Chat eliminado" });
+    } catch (error) {
+        res.status(500).json({ mensaje: "Error al eliminar el chat" });
+    }
+});
 
 
-);
+// --- Mensajes
+app.get("/mensajes", async function(req, res) {
+    try {
+        const mensajes = await realizarQuery(`SELECT id_mensaje, id_usuario, contenido, hora, id_chat FROM Mensajes`);
+        res.status(200).json(mensajes);
+    } catch (error) {
+        console.log("Error al obtener mensajes:", error);
+        res.status(500).json({ mensaje: "Hubo un error al obtener la lista de mensajes" });
+    }
+});
+
+app.post("/mensajes", async function (req, res) {
+    try {
+        await realizarQuery(`INSERT INTO Mensajes (id_mensaje, id_usuario, contenido, hora, id_chat) VALUES
+            ('${req.body.id_mensaje}', '${req.body.id_usuario}', '${req.body.contenido}', '${req.body.hora}', '${req.body.id_chat}')`);        
+        // CORREGIDO: Decía "Usuario creado con éxito"
+        res.status(201).json({ mensaje: "Mensaje creado con éxito" });
+    } catch (error) {
+        res.status(500).json({ mensaje: "Hubo un error al crear un nuevo mensaje" });
+    }
+});
+
+app.delete('/mensajes', async function(req, res){
+    try {
+        // CORREGIDO: Se cambió 'id' por 'id_mensaje'
+        let respuesta = await realizarQuery(`DELETE FROM Mensajes WHERE id_mensaje = '${req.body.id_mensaje}'`);
+        res.status(200).json({ message: "Mensaje eliminado" });
+    } catch (error) {
+        res.status(500).json({ mensaje: "Error al eliminar el mensaje" });
+    }
+});
+
+app.put('/mensajes', async function(req, res){
+    try {
+        let respuesta = await realizarQuery(`UPDATE Mensajes SET contenido = '${req.body.contenido}' WHERE id_mensaje = '${req.body.id_mensaje}'`);
+        res.status(200).json({ message: "Mensaje modificado" });
+    } catch (error) {
+        console.error("Error al modificar el mensaje:", error);
+        res.status(500).json({ mensaje: "Hubo un error al modificar el mensaje"});
+    }
+});
