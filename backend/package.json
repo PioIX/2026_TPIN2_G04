@@ -12,12 +12,13 @@
   "license": "ISC",
   "type": "commonjs",
   "devDependencies": {
-    "nodemon": "^3.1.14"
+    "nodemon": "^1.14.10"
   },
   "dependencies": {
     "cors": "^2.8.6",
     "dotenv": "^17.4.2",
     "express": "^5.2.1",
+    "express-fileupload": "^1.5.2",
     "express-session": "^1.19.0",
     "mysql2": "^3.24.4",
     "socket.io": "^4.8.4"
