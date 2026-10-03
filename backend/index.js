@@ -6,6 +6,9 @@ const session = require("express-session");
 const { Server } = require("socket.io");
 const bodyParser = require('body-parser');
 const { realizarQuery } = require('./modulos/mysql');
+const fs = require('fs');
+const path = require('path');
+const fileUpload = require('express-fileupload');
 
 const app = express();
 const PORT = process.env.PORT || 4000;
@@ -77,14 +80,35 @@ app.get("/usuarios", async function (req, res) {
     }
 });
 
+
+app.use(fileUpload());
+// Nos aseguramos de que exista la carpeta 'uploads'
+const uploadsDir = path.join(__dirname, 'uploads');
+if (!fs.existsSync(uploadsDir)) {
+    fs.mkdirSync(uploadsDir);
+}
+
+app.use('/uploads', express.static(uploadsDir));
+
 app.post("/usuarios", async function (req, res) {
     try {
+        if (req.files && req.files.foto) {
+                const fotoArchivo = req.files.foto;
+                const rutaGuardado = path.join(uploadsDir, `${req.body.id_usuario}.jpg`);
+                
+                // Guardamos la foto físicamente en la carpeta /uploads
+                fotoArchivo.mv(rutaGuardado, (err) => {
+                    if (err) console.error("Error al guardar imagen:", err);
+                });
+            }
+
         await realizarQuery(`INSERT INTO Usuarios (id_usuario, nombre, contraseña, email) VALUES
             ('${req.body.id_usuario}', '${req.body.nombre}', '${req.body.contraseña}', '${req.body.email}')`);
         const usuario = {
             id_usuario: req.body.id_usuario,
             nombre: req.body.nombre,
             email: req.body.email,
+            foto: `http://localhost:4000/uploads/${req.body.id_usuario}.jpg`
         };
         req.session.user = usuario; //el backend se fija en la sesión del usuario que se acaba de crear
         res.status(201).json(usuario); 
@@ -97,7 +121,7 @@ app.post("/login", async function (req, res) {
     try {
         const { email, contraseña } = req.body;
         const resultado = await realizarQuery(
-            `SELECT id_usuario, nombre, email FROM Usuarios
+            `SELECT id_usuario, nombre, contraseña, email FROM Usuarios
             WHERE email = '${email}' AND contraseña = '${contraseña}'`
         );
         if (resultado.length === 0) {
