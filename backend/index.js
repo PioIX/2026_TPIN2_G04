@@ -10,7 +10,10 @@ const { realizarQuery } = require('./modulos/mysql');
 const app = express();
 const PORT = process.env.PORT || 4000;
 
-app.use(cors());
+app.use(cors({
+    origin: ["http://localhost:3000", "http://localhost:3001"],
+    credentials: true,
+}));
 app.use(express.json());
 
 const sessionMiddleware = session({
@@ -64,7 +67,7 @@ io.on("connection", (socket) => {
 
 // Pedidos HTTP
 // --- Usuarios
-app.get("/usuarios", async function(req, res){
+app.get("/usuarios", async function (req, res) {
     try {
         const usuarios = await realizarQuery(`SELECT id_usuario, nombre, contraseña, email FROM Usuarios`);
         res.status(200).json(usuarios);
@@ -74,18 +77,41 @@ app.get("/usuarios", async function(req, res){
     }
 });
 
-app.post("/usuarios", async function(req, res){
+app.post("/usuarios", async function (req, res) {
     try {
         await realizarQuery(`INSERT INTO Usuarios (id_usuario, nombre, contraseña, email) VALUES
             ('${req.body.id_usuario}', '${req.body.nombre}', '${req.body.contraseña}', '${req.body.email}')`);
-        res.status(201).json({ mensaje: "Usuario creado con éxito" });
+        const usuario = {
+            id_usuario: req.body.id_usuario,
+            nombre: req.body.nombre,
+            email: req.body.email,
+        };
+        req.session.user = usuario; //el backend se fija en la sesión del usuario que se acaba de crear
+        res.status(201).json(usuario); 
     } catch (error) {
-        console.error("Error en /usuarios:", error); 
+        console.error("Error en /usuarios:", error);
         res.status(500).json({ mensaje: "Hubo un error al crear el usuario" });
     }
 });
+app.post("/login", async function (req, res) {
+    try {
+        const { email, contraseña } = req.body;
+        const resultado = await realizarQuery(
+            `SELECT id_usuario, nombre, email FROM Usuarios
+            WHERE email = '${email}' AND contraseña = '${contraseña}'`
+        );
+        if (resultado.length === 0) {
+            return res.status(401).json({ mensaje: "Email o contraseña incorrectos" });
+        }
+        req.session.user = resultado[0]; //si los datos son correctos, se guarda la sesion del usuario
+        res.status(200).json(resultado[0]);
+    } catch (error) {
+        console.error("Error en /login:", error);
+        res.status(500).json({ mensaje: "Hubo un error al iniciar sesión" });
+    }
+});
 
-app.delete('/usuarios', async function(req, res){
+app.delete('/usuarios', async function (req, res) {
     try {
         let respuesta = await realizarQuery(`DELETE FROM Usuarios WHERE id_usuario = '${req.body.id_usuario}'`);
         res.status(200).json({ message: "Usuario eliminado" });
@@ -94,18 +120,20 @@ app.delete('/usuarios', async function(req, res){
     }
 });
 
-app.put('/usuarios', async function(req, res){
+app.put('/usuarios', async function (req, res) {
     try {
         let respuesta = await realizarQuery(`UPDATE Usuarios SET nombre = '${req.body.nombre}', email = '${req.body.email}' WHERE id_usuario = '${req.body.id_usuario}'`);
         res.status(200).json({ message: "Usuario modificado" });
     } catch (error) {
         console.error("Error al modificar el usuario:", error);
-        res.status(500).json({ mensaje: "Hubo un error al modificar el usuario"});
+        res.status(500).json({ mensaje: "Hubo un error al modificar el usuario" });
     }
 });
 
+
+
 // --- Chats
-app.get("/chats", async function(req, res) {
+app.get("/chats", async function (req, res) {
     try {
         const chats = await realizarQuery(`SELECT id_chat, es_grupo, nombre, id_usuario FROM Chats`);
         res.status(200).json(chats);
@@ -125,7 +153,7 @@ app.post("/chats", async function (req, res) {
     }
 });
 
-app.delete('/chats', async function(req, res){
+app.delete('/chats', async function (req, res) {
     try {
         let respuesta = await realizarQuery(`DELETE FROM Chats WHERE id_chat = '${req.body.id_chat}'`);
         res.status(200).json({ message: "Chat eliminado" });
@@ -136,7 +164,7 @@ app.delete('/chats', async function(req, res){
 
 
 // --- Mensajes
-app.get("/mensajes", async function(req, res) {
+app.get("/mensajes", async function (req, res) {
     try {
         const mensajes = await realizarQuery(`SELECT id_mensaje, id_usuario, contenido, hora, id_chat FROM Mensajes`);
         res.status(200).json(mensajes);
@@ -149,7 +177,7 @@ app.get("/mensajes", async function(req, res) {
 app.post("/mensajes", async function (req, res) {
     try {
         await realizarQuery(`INSERT INTO Mensajes (id_mensaje, id_usuario, contenido, hora, id_chat) VALUES
-            ('${req.body.id_mensaje}', '${req.body.id_usuario}', '${req.body.contenido}', '${req.body.hora}', '${req.body.id_chat}')`);        
+            ('${req.body.id_mensaje}', '${req.body.id_usuario}', '${req.body.contenido}', '${req.body.hora}', '${req.body.id_chat}')`);
         // CORREGIDO: Decía "Usuario creado con éxito"
         res.status(201).json({ mensaje: "Mensaje creado con éxito" });
     } catch (error) {
@@ -157,7 +185,7 @@ app.post("/mensajes", async function (req, res) {
     }
 });
 
-app.delete('/mensajes', async function(req, res){
+app.delete('/mensajes', async function (req, res) {
     try {
         // CORREGIDO: Se cambió 'id' por 'id_mensaje'
         let respuesta = await realizarQuery(`DELETE FROM Mensajes WHERE id_mensaje = '${req.body.id_mensaje}'`);
@@ -167,12 +195,12 @@ app.delete('/mensajes', async function(req, res){
     }
 });
 
-app.put('/mensajes', async function(req, res){
+app.put('/mensajes', async function (req, res) {
     try {
         let respuesta = await realizarQuery(`UPDATE Mensajes SET contenido = '${req.body.contenido}' WHERE id_mensaje = '${req.body.id_mensaje}'`);
         res.status(200).json({ message: "Mensaje modificado" });
     } catch (error) {
         console.error("Error al modificar el mensaje:", error);
-        res.status(500).json({ mensaje: "Hubo un error al modificar el mensaje"});
+        res.status(500).json({ mensaje: "Hubo un error al modificar el mensaje" });
     }
 });

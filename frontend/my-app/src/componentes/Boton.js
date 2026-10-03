@@ -1,12 +1,9 @@
-"use client"
 
-export default function Boton({text}){
-    const onClick=()=>{
-        //enviar a algun lado
-    };
-    return(
-        <button onClick={onClick}>
+
+export default function Boton({ text, type = "button", onClick }) {
+    return (
+        <button type={type} onClick={onClick}>
             {text}
         </button>
-);
+    );
 }
