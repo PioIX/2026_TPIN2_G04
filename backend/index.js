@@ -1,5 +1,4 @@
-require('dotenv').config({ path: __dirname + '/.home.env' })
-
+require('dotenv').config();
 const express = require("express");
 const cors = require("cors");
 const session = require("express-session");
@@ -18,7 +17,6 @@ app.use(cors({
     credentials: true,
 }));
 app.use(express.json());
-
 const sessionMiddleware = session({
     secret: "supersarasa",
     resave: false,
@@ -117,6 +115,7 @@ app.post("/usuarios", async function (req, res) {
         res.status(500).json({ mensaje: "Hubo un error al crear el usuario" });
     }
 });
+
 app.post("/login", async function (req, res) {
     try {
         const { email, contraseña } = req.body;
@@ -124,9 +123,13 @@ app.post("/login", async function (req, res) {
             `SELECT id_usuario, nombre, contraseña, email FROM Usuarios
             WHERE email = '${email}' AND contraseña = '${contraseña}'`
         );
-        if (resultado.length === 0) {
-            return res.status(401).json({ mensaje: "Email o contraseña incorrectos" });
-        }
+        // if (resultado.length === 0) {
+        //     return res.status(401).json({ mensaje: "Email o contraseña incorrectos" });
+        // }
+
+        if (!email || !contraseña) {
+            return res.status(400).json({ mensaje: "Faltan datos (email o contraseña)" });
+}
         req.session.user = resultado[0]; //si los datos son correctos, se guarda la sesion del usuario
         res.status(200).json(resultado[0]);
     } catch (error) {
