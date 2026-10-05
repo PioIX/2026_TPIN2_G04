@@ -1,4 +1,4 @@
-require('dotenv').config({ path: __dirname + '/.home.env' })
+require('dotenv').config({ path: __dirname + '/pio.env' })
 
 const express = require("express");
 const cors = require("cors");
