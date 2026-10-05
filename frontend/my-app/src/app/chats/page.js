@@ -3,13 +3,19 @@
 import ChatList from "@/componentes/ChatList"
 import { useState } from "react"
 
-export default function PageChats() {
-    const [chats, setChats] = useState("");
+export default function PageChats({ chats, onAgregar, onEliminar }) {
 
-    return(
+    // page.js
+    const handleAgregarChat = (nombreDelNuevoChat) => {
+        // Modifica la lista agregando el nuevo chat
+        setChats([...chats, { id: Date.now(), nombre: nombreDelNuevoChat }]);
+    };
+
+    return (
         <div>
             <ChatList
-                chats={chats} 
+                chats={chats}
+                onAgregar={handleAgregarChat} 
             />
         </div>
     )
