@@ -115,23 +115,30 @@ app.post("/usuarios", async function (req, res) {
         res.status(500).json({ mensaje: "Hubo un error al crear el usuario" });
     }
 });
-
 app.post("/login", async function (req, res) {
     try {
         const { email, contraseña } = req.body;
-        const resultado = await realizarQuery(
-            `SELECT id_usuario, nombre, contraseña, email FROM Usuarios
-            WHERE email = '${email}' AND contraseña = '${contraseña}'`
-        );
-        // if (resultado.length === 0) {
-        //     return res.status(401).json({ mensaje: "Email o contraseña incorrectos" });
-        // }
 
+        // 1. PRIMERO validamos que vengan los datos
         if (!email || !contraseña) {
             return res.status(400).json({ mensaje: "Faltan datos (email o contraseña)" });
-}
-        req.session.user = resultado[0]; //si los datos son correctos, se guarda la sesion del usuario
+        }
+
+        // 2. Hacemos la consulta a la base de datos
+        const resultado = await realizarQuery(
+            `SELECT id_usuario, nombre, contraseña, email FROM Usuarios
+             WHERE email = '${email}' AND contraseña = '${contraseña}'`
+        );
+
+        // 3. Verificamos si encontró al usuario
+        if (!resultado || resultado.length === 0) {
+            return res.status(401).json({ mensaje: "Email o contraseña incorrectos" });
+        }
+
+        // 4. Guardamos la sesión y respondemos con el usuario
+        req.session.user = resultado[0];
         res.status(200).json(resultado[0]);
+
     } catch (error) {
         console.error("Error en /login:", error);
         res.status(500).json({ mensaje: "Hubo un error al iniciar sesión" });
