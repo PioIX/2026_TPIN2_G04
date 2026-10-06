@@ -1,28 +1,31 @@
 'use client'
 
-export default function ChatItem( { type = "button", foto, nombre, onClick, onEliminar} ) {
-    
+export default function ChatItem({ chat, onEliminar }) {
+    const handleEliminar = () => {
+        // Le avisamos a PageChats que borre este ID
+        onEliminar(chat.id);
+    }
 
-    return(
-        <div>
+    return (
+        <li>
             {/* Botón de chat con foto de perfil y nombre */}
-            <button type={type} onClick={onClick}>
+            <button type="button">
                 <img 
-                src={foto} 
-                width="20" 
-                height="20"
-                onError={(e) => {
-                    // Si la URL da 404 (no existe la foto en uploads/), carga la default
-                    e.target.src = "/default-foto.jpg";
-                }}
+                    src={chat.foto || "/default-foto.jpg"} 
+                    width="20" 
+                    height="20"
+                    onError={(e) => {
+                        e.target.src = "/default-foto.jpg";
+                    }}
+                    alt={chat.nombre}
                 />
-                <span>{nombre}</span>  
+                <span>{chat.nombre}</span>  
             </button>
 
-            {/* Boton para borrar chat */}
-            <button
-            onClick={onEliminar}>
+            {/* Botón para borrar chat */}
+            <button onClick={handleEliminar}>
+                Eliminar chat
             </button>
-        </div>
+        </li>
     )
 }
