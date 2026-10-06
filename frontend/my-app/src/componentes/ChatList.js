@@ -2,41 +2,39 @@
 import ChatItem from './ChatItem.js'
 import { useState } from "react"
 
+export default function ChatList({ chats = [], onAgregar, onEliminar }) {
+    const [nuevoContacto, setNuevoContacto] = useState("");
 
-export default function ChatList({ onAgregar, onEliminar }) {
-    const [chats, setChats] = useState([]);
-
-    const items = [];
-
-    for (let i = 0; i < chats.length; i++) {
-        items.push(
-            <ChatItem
-                key={i}
-                chat={chats[i]}
-                indice={i}
-                onEliminar={onEliminar}
-            />
-        );
-    }
     const handleAgregar = () => {
-        onAgregar(chats);
-        setChats(""); // Limpias tu input
+        if (nuevoContacto.trim() === "") return; // Si está vacío no hace nada
+        onAgregar(nuevoContacto);
+        setNuevoContacto(""); // Limpias el input
     }
 
     return (
         <div>
-            <button
-                onClick={handleAgregar} // con un CLICK se activa la función
-            >Agregar chat</button>
-            <ChatItem />
+            {/* Input para escribir el nombre del nuevo chat */}
+            <input 
+                type="text" 
+                value={nuevoContacto} 
+                onChange={(e) => setNuevoContacto(e.target.value)} 
+                placeholder="Número de telefono a agendar..."
+            />
+            <button onClick={handleAgregar}>Agregar chat</button>
+
             {chats.length === 0 ? (
                 <p>No tenés chats.</p>
             ) : (
                 <ul>
-                    {items}
+                    {chats.map((chat) => (
+                        <ChatItem
+                            key={chat.id}
+                            chat={chat}
+                            onEliminar={onEliminar}
+                        />
+                    ))}
                 </ul>
             )}
-
         </div>
     )
 }
